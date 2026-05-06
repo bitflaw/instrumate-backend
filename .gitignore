@@ -12,3 +12,5 @@ instrumate/__pycache__
 instrumate.zip
 instrumate/instrumate/__pycache__
 instrumate/api/utils/__pycache__/
+instrumate/mvmt.sqlite3
+*.sqlite3
