@@ -1,14 +1,11 @@
 .venv
 .direnv
-InstruMate-Africa.git/
 instrumate/.env
 instrumate/api/migrations/
 instrumate/auth_/migrations
 instrumate/auth_/__pycache__
 instrumate/api/__pycache__
-instrumate/bvh_files.db
 instrumate/__pycache__
-instrumate.zip
 instrumate/instrumate/__pycache__
 instrumate/api/utils/__pycache__/
 instrumate/mvmt.sqlite3
@@ -16,4 +13,5 @@ instrumate/mvmt.sqlite3
 instrumate/translation_model/*-model/*.safetensors
 instrumate/translation_model/*-model/*.bin
 instrumate/translation_model/*-model/spiece.model
-instrumate/translation_model/_pycache__
+instrumate/translation_model/__pycache__
+instrumate/dataset.sqlite3.db
