@@ -235,3 +235,27 @@ class KSL_To_Eng(APIView):
 
         return Response({"translation": translation}, status=status.HTTP_200_OK)
     
+
+class Animations(APIView):
+    def get(self, request):
+        text = request.data.get("text")
+        if text is None:
+            return Response({"message": "Nothing to get animation data for:"} , status=status.HTTP_400_BAD_REQUEST)
+        
+        words: list[str] = text.split(" ")
+        animation_data = []
+        dataset_filepath = os.path.join(settings.base_dir, "dataset.sqlite3.db")
+        cxn = sqlite3.connect(dataset_filepath)
+        cursor = cxn.cursor()
+        placeholders = ", ".join(['?'] * len(words))
+        query = f"SELECT ani_data FROM records WHERE name IN ({placeholders})"
+        cursor.execute(query, words)
+        data = cursor.fetchall()
+
+        for d in data:
+            blob = json.loads(str(d[0].decode('utf-8')))
+            animation_data += blob
+
+        cursor.close()
+        cxn.close()
+        return Response({"animation_data": animation_data}, status=status.HTTP_200_OK)
