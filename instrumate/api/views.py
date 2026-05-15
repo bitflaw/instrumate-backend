@@ -2,8 +2,12 @@ from django.http import FileResponse
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from django.conf import settings
 import pymupdf
+import sqlite3
+import json
 import os
 import uuid
 import json
@@ -21,8 +25,6 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# METHODS
 
 def clean_text(text):
         # Remove invisible characters
@@ -42,7 +44,7 @@ def split_words(sentence):
     words = re.findall(r'\b\w+\b', sentence)
     return words
 
-    
+
 def reconstruct_sentences(sentences: list[str]) -> str:
     result = []
     for sentence in sentences:
@@ -55,8 +57,6 @@ def reconstruct_sentences(sentences: list[str]) -> str:
             sentence += '.'
         result.append(sentence)
     return " ".join(result)
-
-
 
 
 class HandleUpload(APIView):
@@ -107,7 +107,8 @@ class HandleUpload(APIView):
 
         self.file_name = uploaded_file.name
 
-        tmp_file_dir = "/tmp/upload_dir/images"
+        tmp_img_dir = "/tmp/upload_dir/images"
+        tmp_file_dir = "/tmp/upload_dir/files"
         if not os.path.exists(tmp_file_dir):
             os.makedirs(tmp_file_dir)
         tmp_file_path = os.path.join(tmp_file_dir, self.file_name)
@@ -119,9 +120,9 @@ class HandleUpload(APIView):
             # store chunks in redis
             self.file_chunker(tmp_file_path)
             for i in range(0, len(self.chunks),1):
-                sentences = split_sentences(self.chunks[i]["text"])
+                sentences: list[str] = split_sentences(self.chunks[i]["text"])
             task_id = str(uuid.uuid4())
-            redis_client.setex(task_id, 300, json.dumps(sentences))  # Store for 5 minutes
+            redis_client.setex(task_id, 300, json.dumps(sentences))  # Store for 5 minutes(300s)
             # Store context for the response
             context = {
                 "task_id": task_id,
@@ -143,25 +144,6 @@ class ServeFiles(APIView):
             return Response({"error": "Image requested not found"}, status=status.HTTP_404_NOT_FOUND)
 
         return FileResponse(open(image_filepath, 'rb'), content_type='image/png')
-    
-
-class ServeBvh(APIView):
-    def get(self, request):
-        task_id = request.data.get("task_id")
-        cached_words = redis_client.get(task_id)
-        if not cached_words:
-            return Response({"error": "No cached data found for the provided task_id"}, status=status.HTTP_404_NOT_FOUND)
-        dict_words = json.loads(cached_words)
-        # Fetch BVH files from the database
-        bvh_files = Movement.objects.using('movement_files').filter(name__in=dict_words)        
-        files = []
-        for bvh_file in bvh_files:
-            files.append({
-                "name": bvh_file.name,
-                "file": bvh_file.file,
-            })
-        return Response({"files": files}, status=status.HTTP_200_OK)
-            
 
 
 class Eng_To_KSL(APIView):
@@ -170,14 +152,17 @@ class Eng_To_KSL(APIView):
         task_id = request.data.get("task_id")
         if not task_id:
             return Response({"error": "task_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         redis_key = task_id
         # load cached sentences from Redis
         cached_sentences = redis_client.get(redis_key)
         if not cached_sentences:
-            return Response({"error": "No cached data found for the provided task_id"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                    {"error": "No cached data found for the provided task_id"},
+                    status=status.HTTP_404_NOT_FOUND
+                    )
         # Step 2: Parse the cached sentences
-        dict_cached_sentences = json.loads(cached_sentences)
+        dict_cached_sentences = json.loads(str(cached_sentences))
         # Step 3: Translate each sentence
         translated_sentences = []
 
@@ -228,7 +213,6 @@ class Eng_To_KSL(APIView):
             "Words": words
         }, status=status.HTTP_200_OK)
 
-    
 
 class KSL_To_Eng(APIView):
     def post(self, request):
