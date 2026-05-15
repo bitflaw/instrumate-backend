@@ -34,6 +34,12 @@ To set up and build the project locally, follow these steps:
       python3 -m venv venv
       source venv/bin/activate
       ```
+    
+    - Remove Bulky dependencies (if any):
+      ```bash
+      pip uninstall -r to_delete.txt -y
+      ```
+    
     - Install dependencies:
       ```bash
       pip install -r requirements.txt

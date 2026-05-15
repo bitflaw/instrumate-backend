@@ -8,13 +8,14 @@ import os
 import uuid
 import json
 import re
+import requests # 💡 Add this import
+import json
 from nltk.tokenize import sent_tokenize
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Movement
-from .utils.redis_client import redis_client  # Adjust path to where you put redis_client
-
-from translation_model.translate_to_ksl import eng_to_ksl_translator, ksl_to_eng_translator
+from .utils.redis_client import redis_client  # Adjust path to where you put redis_client   
+from instrumate.settings import MODEL_URL
 # Create your views here.
 import logging
 
@@ -179,41 +180,74 @@ class Eng_To_KSL(APIView):
         dict_cached_sentences = json.loads(cached_sentences)
         # Step 3: Translate each sentence
         translated_sentences = []
+
+        # Translation path
+        TRANSLATION_SERVICE_URL = f"{MODEL_URL}/translate/eng_to_ksl"
+
         for sentence in dict_cached_sentences:
             sentence_key = f"{task_id}:{sentence}"
-            # Check if translation is cached. If cached, use it, otherwise translate and cache it
             cached_translation = redis_client.get(sentence_key)
+
             if cached_translation:
-                translation = cached_translation
+                translation = cached_translation.decode('utf-8')
             else:
-                translation = eng_to_ksl_translator(sentence)
-                redis_client.set(sentence_key, translation, ex=300) # Cache for 5 minutes
+                try:
+                    response = requests.post(
+                        TRANSLATION_SERVICE_URL,
+                        json={"text": sentence},
+                        timeout=10 # Inference can take a few seconds
+                    )   
+                    
+                    if response.status_code == 200:
+                        # Extract from {"translation": "..."} based on your FastAPI return
+                        translation = response.json().get("content", {}).get("translation")
+                        redis_client.set(sentence_key, translation, ex=300)
+                    else:
+                        translation = "[Translation Error]"
+                except requests.exceptions.RequestException as e:
+                    return Response({"error": f"Translation service unreachable: {str(e)}"}, 
+                                    status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
             translated_sentences.append(translation)
-        # Step 4: Reconstruct the full translation
+
+        # Step 4: Reconstruct (Rest of your logic remains exactly the same)
         full_translation = reconstruct_sentences(translated_sentences)
         translated_sentences = split_sentences(full_translation)
+        
         words = []
         for sentence in translated_sentences:
-            sentence_words = split_words(sentence)
-            words.extend(sentence_words)
-        # Step 5: Cache the full translation and words to be sent to BVH
+            words.extend(split_words(sentence))
+
         full_translation_key = f"{task_id}:full_translation"
-        redis_client.setex(full_translation_key, 300, json.dumps(words))  # Store for 5 minutes
-        # Step 4: Return the full translation and original sentences
-        context = {
+        redis_client.setex(full_translation_key, 300, json.dumps(words))
+
+        return Response({
             "task_id": full_translation_key,
             "translated_sentences": translated_sentences,
             "Orginal_sentences": dict_cached_sentences,
             "Words": words
-        }
-        return Response(context, status=status.HTTP_200_OK)
+        }, status=status.HTTP_200_OK)
 
     
 
 class KSL_To_Eng(APIView):
     def post(self, request):
         text = request.data.get("text", "")
-        translation = ksl_to_eng_translator(text)
+        TRANSLATION_SERVICE_URL = f"{MODEL_URL}/translate/ksl_to_eng"
+        try:
+            response = requests.post(
+                TRANSLATION_SERVICE_URL,
+                json={"text": text},
+                timeout=10 # Inference can take a few seconds
+            )   
+            
+            if response.status_code == 200:
+                translation = response.json().get("content", {}).get("translation")
+            else:
+                translation = "[Translation Error]"
+        except requests.exceptions.RequestException as e:
+            return Response({"error": f"Translation service unreachable: {str(e)}"}, 
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         return Response({"translation": translation}, status=status.HTTP_200_OK)
     
