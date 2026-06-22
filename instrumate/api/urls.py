@@ -1,6 +1,8 @@
 from django.urls import path
-from . import views
 from django.conf.urls.static import static
+from . import views
+import tempfile
+import os
 
 urlpatterns = [
     path ("upload/", views.HandleUpload.as_view(), name="upload"),
@@ -9,4 +11,6 @@ urlpatterns = [
     path ("translate/ksl_to_eng/", views.KSL_To_Eng.as_view(), name="ksl_to_eng"),
     path ("get_animations/", views.Animations.as_view(), name="get_animation_data"),
 ]
-urlpatterns += static('/media', document_root='/tmp/upload_dir/images')
+
+tmp_dir = tempfile.gettempdir()
+urlpatterns += static('/media', document_root=os.path.join(tmp_dir, '/upload_dir/images'))

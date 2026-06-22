@@ -10,8 +10,4 @@ instrumate/instrumate/__pycache__
 instrumate/api/utils/__pycache__/
 instrumate/mvmt.sqlite3
 *.sqlite3
-instrumate/translation_model/*-model/*.safetensors
-instrumate/translation_model/*-model/*.bin
-instrumate/translation_model/*-model/spiece.model
-instrumate/translation_model/__pycache__
 instrumate/dataset.sqlite3.db

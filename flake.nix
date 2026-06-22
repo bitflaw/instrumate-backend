@@ -11,11 +11,11 @@
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        nativeBuildInputs = with pkgs; [
-          pyright
+        nativeBuildInputs = [
+          pkgs.pyright
         ];
-        buildInputs = with pkgs; [
-          python3
+        buildInputs = [
+          pkgs.python3
         ];
         shellHook = ''
           export SHELL="${pkgs.bashInteractive}/bin/bash"
