@@ -1,5 +1,5 @@
 > [!Note]
-> This is the backend of [Instrumate-Africa](github.com/FRANCISMUNGANGU/Instrumate-Africa)
+> This is the backend of [Instrumate-Africa](https://github.com/FRANCISMUNGANGU/Instrumate-Africa)
 
 ## Build Instructions
 
