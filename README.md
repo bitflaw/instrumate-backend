@@ -23,14 +23,13 @@ To set up and build the project locally, follow these steps:
       ```
 
 3. **Run the backend server:**
-   - **Locally** 
+   - **Locally**
     ```bash
     python manage.py runserver
-    ```
     ```
 
 > [!Note]
 > Make sure you have Python 3.8+
 
 > [!Warning]
-> This project is currently private and not publicly accessible.
+> This project is not publicly accessible.
