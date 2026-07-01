@@ -1,0 +1,60 @@
+services:
+  instrumate_postgres_db:
+    container_name: instrumate_postgres_db
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${PSQL_DB_USER}
+      POSTGRES_DB: ${PSQL_DB_NAME}
+      POSTGRES_PASSWORD: ${PSQL_DB_PASSWORD}
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PSQL_DB_USER} -d ${PSQL_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    ports:
+      - "${PSQL_DB_PORT}:${PSQL_DB_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  instrumate_redis_cache:
+    image: redis:7.4-alpine
+    container_name: instrumate_redis_cache
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${redis_port}:${redis_port}"
+
+    volumes:
+    - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+  
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+
+  instrumate_backend_api:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      - instrumate_postgres_db
+      - instrumate_redis_cache
+
+volumes:
+  postgres_data:
+  redis_data:

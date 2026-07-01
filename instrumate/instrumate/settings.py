@@ -79,8 +79,8 @@ DATABASES = {
         'NAME': os.getenv('PSQL_DB_NAME'),
         'USER': os.getenv('PSQL_DB_USER'),
         'PASSWORD': os.getenv('PSQL_DB_PASSWORD'),
-        'HOST': os.getenv('PSQL_DB_HOST'),
-        'PORT': os.getenv('PSQL_DB_PORT', 5432)
+        'HOST': os.getenv('DOCKER_DB_SERVICE_NAME'),
+        'PORT': os.getenv('PSQL_DB_PORT')
     },
     'movement_files': {
         'ENGINE': 'django.db.backends.sqlite3',

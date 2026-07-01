@@ -246,7 +246,7 @@ class KSL_To_Eng(APIView):
 
 
 class Animations(APIView):
-    def get(self, request):
+    def post(self, request):
         text = request.data.get("text")
         if text is None:
             return Response({"message": "Nothing to get animation data for:"} , status=status.HTTP_400_BAD_REQUEST)
