@@ -45,7 +45,7 @@ class LoginView(APIView):
 
             response.set_cookie(
                 key='refresh_token',
-                value=tokens.get('refresh_token'),
+                value=str(tokens.get('refresh_token')),
                 httponly=True,
                 secure=True,
                 samesite='Lax',

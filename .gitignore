@@ -1,14 +1,9 @@
 .venv
 .direnv
+instrumate/content
 instrumate/.env
-instrumate/api/migrations/
-instrumate/auth_/migrations
-instrumate/auth_/__pycache__
-instrumate/api/__pycache__
-instrumate/__pycache__
-instrumate/instrumate/__pycache__
-instrumate/api/utils/__pycache__/
-instrumate/mvmt.sqlite3
-*.sqlite3
-instrumate/dataset.sqlite3.db
-content
+instrumate/**/migrations
+instrumate/**/__pycache__
+instrumate/*.sqlite3
+instrumate/*.sqlite3.db
+           *.sqlite3

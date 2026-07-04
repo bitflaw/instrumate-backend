@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'auth_',
     'api',
+    'lms',
     'redis',
     'nltk',
 ]
