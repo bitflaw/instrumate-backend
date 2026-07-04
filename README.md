@@ -28,8 +28,5 @@ To set up and build the project locally, follow these steps:
     python manage.py runserver
     ```
 
-> [!Note]
-> Make sure you have Python 3.8+
-
 > [!Warning]
 > This project is not publicly accessible.

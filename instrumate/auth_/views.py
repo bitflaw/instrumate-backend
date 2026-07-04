@@ -1,10 +1,10 @@
+from . import serializers
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from django.contrib.auth import authenticate
-from rest_framework import status
-from . import serializers
 
 
 class RegistrationView(APIView):
@@ -13,7 +13,7 @@ class RegistrationView(APIView):
         serializer = serializers.RegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
-            user = serializer.save()
+            serializer.save()
             return Response({"message": "successful registration"},
                             status=status.HTTP_201_CREATED)
 

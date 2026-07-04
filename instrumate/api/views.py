@@ -8,14 +8,11 @@ import tempfile
 import redis
 import pymupdf
 from django.conf import settings
-from django.http import FileResponse
-from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from rest_framework.response import Response
 from nltk.tokenize import sent_tokenize
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
 from instrumate.settings import MODEL_URL
 
 def clean_text(text):
@@ -137,17 +134,6 @@ class HandleUpload(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class ServeFiles(APIView):
-
-    def post(self, request, filename):
-        tmp_dir = tempfile.gettempdir()
-        image_filepath = os.path.join(tmp_dir, "/upload_dir/images/", filename)
-        if not os.path.exists(image_filepath):
-            return Response({"error": "Image requested not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        return FileResponse(open(image_filepath, 'rb'), content_type='image/png')
-
 
 class Eng_To_KSL(APIView):
     def post(self, request):
