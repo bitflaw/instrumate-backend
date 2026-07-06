@@ -40,7 +40,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://locahost:3000'
+    "http://localhost:5173",    
 ]
 
 ROOT_URLCONF = 'instrumate.urls'

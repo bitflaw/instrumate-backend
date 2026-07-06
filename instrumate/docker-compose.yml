@@ -16,6 +16,9 @@ services:
       timeout: 5s
       retries: 5
 
+    networks:
+      - instrumate_network
+      
     ports:
       - "${PSQL_DB_PORT}:${PSQL_DB_PORT}"
     volumes:
@@ -30,6 +33,8 @@ services:
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
 
+    networks:
+      - instrumate_network
     volumes:
     - redis_data:/data
     deploy:
@@ -50,9 +55,19 @@ services:
       - .env
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
+    networks:
+      - instrumate_network
     depends_on:
-      - instrumate_postgres_db
-      - instrumate_redis_cache
+      instrumate_redis_cache:
+        condition: service_started
+      instrumate_postgres_db:
+        condition: service_healthy
+
+networks:
+  instrumate_network:
+    external: true
+    name: instrumate_shared_network     
+
 
 volumes:
   postgres_data:

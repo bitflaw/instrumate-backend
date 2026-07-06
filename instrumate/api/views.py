@@ -15,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from instrumate.settings import MODEL_URL
 
+
+
 def clean_text(text):
         # Remove invisible characters
         text = re.sub(r'[\u200b\u200c\u200d\u200e\u200f]', '', text)
@@ -137,16 +139,30 @@ class HandleUpload(APIView):
 
 class Eng_To_KSL(APIView):
     def post(self, request):
-        # Step 1: Get task_id from request
-        task_id = request.data.get("task_id")
-        if not task_id:
-            return Response({"error": "task_id not provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        redis_client = redis.Redis(
+        try:
+            redis_client = redis.Redis(
                 host=os.getenv('REDIS_HOST', 'localhost'),
                 port=int(os.getenv('REDIS_PORT', 6379)),
                 decode_responses=True,
-                )
+            )
+        except Exception as e:
+            return Response({"error": f"Redis connection failed: {str(e)}"}, 
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        task_id = request.data.get("task_id")
+        text = request.data.get("text", "")
+        print(text)
+
+         # If frontend didn't pass a task_id, generate one and cache the input text
+        if not task_id:
+            task_id = str(uuid.uuid4())
+            try:
+                sentences = split_sentences(text)
+                redis_client.setex(task_id, 300, json.dumps(sentences))
+            except Exception as e:
+                return Response({"error": f"Failed to process or cache text: {str(e)}"}, 
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # load cached sentences from Redis
         cached_sentences = redis_client.get(task_id)
@@ -162,13 +178,13 @@ class Eng_To_KSL(APIView):
         translated_sentences: list[str] = []
 
         # Translation path
-        TRANSLATION_SERVICE_URL = f"{MODEL_URL}/translate/eng_to_ksl"
+        TRANSLATION_SERVICE_URL = f"{MODEL_URL}/translate/english-to-ksl"
 
         for sentence in dict_cached_sentences:
             sentence_key = f"{task_id}:{sentence}"
-            cached_translation = str(redis_client.get(sentence_key))
+            cached_translation = redis_client.get(sentence_key)
 
-            if cached_translation == "_\r\n":
+            if not cached_translation:
                 try:
                     response = requests.post(
                         TRANSLATION_SERVICE_URL,
@@ -178,7 +194,7 @@ class Eng_To_KSL(APIView):
 
                     if response.status_code == 200:
                         # Extract from {"translation": "..."} based on your FastAPI return
-                        translation = response.json().get("content", {}).get("translation")
+                        translation = response.json().get("translation")
                         redis_client.set(sentence_key, translation, ex=300)
                     else:
                         translation = "[Translation Error]"
@@ -212,7 +228,7 @@ class Eng_To_KSL(APIView):
 class KSL_To_Eng(APIView):
     def post(self, request):
         text = request.data.get("text", "")
-        TRANSLATION_SERVICE_URL = f"{MODEL_URL}/translate/ksl_to_eng"
+        TRANSLATION_SERVICE_URL = f"{MODEL_URL}/translate/ksl-to-eng"
         try:
             response = requests.post(
                 TRANSLATION_SERVICE_URL,
@@ -237,13 +253,13 @@ class Animations(APIView):
         if text is None:
             return Response({"message": "Nothing to get animation data for:"} , status=status.HTTP_400_BAD_REQUEST)
 
-        words: list[str] = text.split(" ")
+        words: list[str] = text.split(" ") if isinstance(text, str) else text
         animation_data = []
         dataset_filepath = os.path.join(settings.BASE_DIR, "dataset.sqlite3.db")
         cxn = sqlite3.connect(dataset_filepath)
         cursor = cxn.cursor()
         placeholders = ", ".join(['?'] * len(words))
-        query = f"SELECT ani_data FROM records WHERE name IN ({placeholders})"
+        query = f"SELECT ani_data FROM records WHERE name COLLATE NOCASE IN ({placeholders})"
         cursor.execute(query, words)
         data = cursor.fetchall()
 
