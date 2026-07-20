@@ -30,3 +30,5 @@ To set up and build the project locally, follow these steps:
 
 > [!Warning]
 > This project is not publicly accessible.
+
+The [KSL Feedback Pipeline](https://github.com/bitflaw/KSL-Feedback-Pipeline).

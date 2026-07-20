@@ -1,5 +1,5 @@
 services:
-  instrumate_postgres_db:
+  pgdb:
     container_name: instrumate_postgres_db
     image: postgres:16-alpine
     restart: always
@@ -22,9 +22,9 @@ services:
     ports:
       - "${PSQL_DB_PORT}:${PSQL_DB_PORT}"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./pg_data:/var/lib/postgresql/data
 
-  instrumate_redis_cache:
+  cache:
     image: redis:7.4-alpine
     container_name: instrumate_redis_cache
     restart: unless-stopped
@@ -49,7 +49,7 @@ services:
       retries: 3
 
 
-  instrumate_backend_api:
+  backend:
     build: .
     env_file:
       - .env
@@ -58,17 +58,16 @@ services:
     networks:
       - instrumate_network
     depends_on:
-      instrumate_redis_cache:
+      cache:
         condition: service_started
-      instrumate_postgres_db:
+      pgdb:
         condition: service_healthy
 
 networks:
   instrumate_network:
     external: true
-    name: instrumate_shared_network     
-
+    name: instrumate_shared_network
 
 volumes:
-  postgres_data:
+  pg_data:
   redis_data:

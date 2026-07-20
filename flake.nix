@@ -16,6 +16,7 @@
         ];
         buildInputs = [
           pkgs.python3
+          pkgs.python313Packages.psycopg2
         ];
         shellHook = ''
           export LD_LIBRARY_PATH="${
