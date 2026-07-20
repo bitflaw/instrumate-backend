@@ -14,20 +14,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN python -m nltk.downloader punkt_tab
 
-
 COPY migrations.sh .
-
 RUN chmod +x migrations.sh
-
 RUN ./migrations.sh
 
 COPY . .
 EXPOSE 8000
-
-# necessary to run migrations
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
 
 # development only
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

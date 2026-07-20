@@ -1,7 +1,7 @@
 services:
   pgdb:
     container_name: instrumate_postgres_db
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     restart: always
     env_file:
       - .env
@@ -16,13 +16,13 @@ services:
       timeout: 5s
       retries: 5
 
-    networks:
-      - instrumate_network
-      
+    # networks:
+    #   - instrumate_network
+
     ports:
-      - "${PSQL_DB_PORT}:${PSQL_DB_PORT}"
+      - "${PSQL_DB_PORT:-5432}:5432"
     volumes:
-      - ./pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
 
   cache:
     image: redis:7.4-alpine
@@ -31,10 +31,10 @@ services:
     env_file:
       - .env
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+      - "${REDIS_PORT:-6379}:6379"
 
-    networks:
-      - instrumate_network
+    # networks:
+    #   - instrumate_network
     volumes:
     - redis_data:/data
     deploy:
@@ -54,20 +54,20 @@ services:
     env_file:
       - .env
     ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
-    networks:
-      - instrumate_network
+      - "${BACKEND_PORT:-8000}:8000"
+    # networks:
+    #   - instrumate_network
     depends_on:
       cache:
         condition: service_started
       pgdb:
         condition: service_healthy
 
-networks:
-  instrumate_network:
-    external: true
-    name: instrumate_shared_network
-
+# networks:
+#   instrumate_network:
+#     external: true
+#     name: instrumate_shared_network
+#
 volumes:
   pg_data:
   redis_data:

@@ -19,8 +19,6 @@ To set up and build the project locally, follow these steps:
       cd instrumate
       pip install -r requirements.txt
       ```
-      ```bash
-      ```
 
 3. **Run the backend server:**
    - **Locally**
@@ -32,3 +30,34 @@ To set up and build the project locally, follow these steps:
 > This project is not publicly accessible.
 
 The [KSL Feedback Pipeline](https://github.com/bitflaw/KSL-Feedback-Pipeline).
+
+## DATABASE SETUP
+
+This project uses PostgreSQL as its primary database engine.
+
+1. **To setup using docker**:
+    ```bash
+    $ docker compose up -d pgdb
+    ```
+
+    By default, the database is exposed on port `5432` on your machine.
+    > [!Note]
+    > This might collide with your host's instance of postgres server if it is running on the same port.
+    > A solution would be to setup a .env file at the root of the project(instrumate) specifying the port you want the database
+    > to run on.
+
+    A seed file has been provided in the dropbox folder shared, and to setup the seed data, run the following command using the dump file:
+    ```bash
+    $ pg_restore -h localhost -p <PORT-SPECIFIED> -U {postgres/your user} -d <DATABASE> seed.dump
+    ```
+
+2. **To stop the database container**:
+    ```bash
+    $ docker compose down pgdb
+    ```
+
+3. **If you have made any changes to your local database**, and you wish for the data to be used by other members of the team:
+    ```bash
+    $ pg_dump -Fc <DATABASE_NAME> -U <USER> -h localhost -p <PORT> > seed.dump
+    ```
+    Then upload that dump file to the dropbox.

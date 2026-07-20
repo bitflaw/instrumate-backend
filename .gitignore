@@ -1,6 +1,7 @@
 .venv
 .direnv
 instrumate/content
+instrumate/pg_data
 instrumate/.env
 instrumate/**/migrations
 instrumate/**/__pycache__

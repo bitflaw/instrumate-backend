@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Run migration instructions for the Django application
-echo "Starting database migrations..."
+set -e
+
+echo "[INFO] Running migrations..."
 python manage.py make_migrations
 python manage.py migrate
-echo "Database migrations completed successfully."
+echo "[INFO] Database migrations completed successfully."
 
