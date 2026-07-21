@@ -21,5 +21,4 @@ RUN ./migrations.sh
 COPY . .
 EXPOSE 8000
 
-# development only
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "instrumate.asgi:application", "-k", "uvicorn_worker.UvicornWorker"]
